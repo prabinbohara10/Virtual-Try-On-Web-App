@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="main.css">
+    <title>Virtual_Try_On</title>
+</head>
+<body>
+    {% load static %}
+    <h1 id="title1">Virtual Try On </h1>
+    <H1 id="title2">Using Generative Modeling</H1>
+
+    <div id="inputs"> 
+
+    <form id="form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p style="color: #8f251a;">Target Person's Image</p>
+        <input type="file" name="sentFile1" />
+
+        <p style="color: #8f251a;">Reference Cloth</p>
+        <input type="file" name="sentFile2" />
+        <input type="submit" name="submit" value="Upload" />
+    </form>
+
+    {% if condition_met %}
+    <div class="image-container1">
+        <div >
+            <h1 style="color: #8f251a;">Input Images</h1>
+            <img src="{% static 'image/latest.jpg' %}" alt="Image">
+            <img src="{% static 'cloth/latest.jpg' %}" alt="Image">
+        </div>
+    </div>
+</div>
+
+    <div class="image-container2">
+        <div >
+            <h1 style="color: #8f251a;">Output Images</h1>
+            <img src="{% static 'overlayed_TPS/latest.jpg' %}" alt="Image">
+            <img src="{% static 'result_dir/latest.jpg' %}" alt="Image">
+            <img src="{% static 'warp-cloth/latest.jpg' %}" alt="Image">
+            <img src="{% static 'warp-mask/latest.jpg' %}" alt="Image">
+            <img src="{% static 'warped_grid/latest.jpg' %}" alt="Image">
+
+            {% else %}
+            <p>No images to display.</p>
+        {% endif %}
+        </div>
+        
+    </div>
+   
+
+
+</body>
+</html>
