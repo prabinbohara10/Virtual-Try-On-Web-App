@@ -56,8 +56,8 @@ class CPDataset(data.Dataset):
             c = Image.open(osp.join(self.data_path, 'cloth', c_name))
             cm = Image.open(osp.join(self.data_path, 'cloth-mask', c_name)).convert('L')
         else:
-            c = Image.open(osp.join(self.data_path, 'warp-cloth', im_name))    # c_name, if that is used when saved
-            cm = Image.open(osp.join(self.data_path, 'warp-mask', im_name)).convert('L')    # c_name, if that is used when saved
+            c = Image.open(osp.join(self.data_path, 'warp-cloth', c_name))    # c_name, if that is used when saved
+            cm = Image.open(osp.join(self.data_path, 'warp-mask', c_name)).convert('L')    # c_name, if that is used when saved
 
         c = self.transform(c)  # [-1,1]
         cm_array = np.array(cm)

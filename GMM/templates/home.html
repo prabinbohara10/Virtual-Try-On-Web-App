@@ -36,12 +36,22 @@
 
     <div class="image-container2">
         <div >
+        
+            
             <h1 style="color: #8f251a;">Output Images</h1>
+            <h2 style="color: #8f251a;">Geometric Matching Module</h2>
             <img src="{% static 'result/GMM/test/overlayed_TPS/latest.jpg' %}" alt="Image">
             <img src="{% static 'result/GMM/test/result_dir/latest.jpg' %}" alt="Image">
             <img src="{% static 'result/GMM/test/warp-cloth/latest.jpg' %}" alt="Image">
             <img src="{% static 'result/GMM/test/warp-mask/latest.jpg' %}" alt="Image">
             <img src="{% static 'result/GMM/test/warped_grid/latest.jpg' %}" alt="Image">
+            
+
+            
+            {% comment %} <h2 style="color: #8f251a;">Geometric Matching Module</h2> {% endcomment %}
+            <img src="{% static 'result2/TOM/test/p_rendered/latest.jpg' %}" alt="Image">
+            <img src="{% static 'result2/TOM/test/try-on/latest.jpg' %}" alt="Image">
+            
 
             {% else %}
             <p>No images to display.</p>

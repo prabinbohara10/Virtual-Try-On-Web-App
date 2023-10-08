@@ -21,15 +21,17 @@ from django.core.files.storage import default_storage
 #from keras.preprocessing.image import load_img
 #from keras.preprocessing.image import img_to_array
 import argparse
-
+main_stage = "GMM"
 
 def get_opt():
     module_dir = os.path.dirname(__file__)  
     dataroot = os.path.join(module_dir, 'data')
     checkpoint = os.path.join(module_dir,'checkpoints/GMM/gmm_50k.pth')
     result  =  os.path.join(module_dir,"static/result")
+    
     args = {
         "name": "GMM",
+        "name2": "GMM",
         "gpu_ids": "",
         "workers": 1,
         "batch_size": 4,
@@ -43,7 +45,9 @@ def get_opt():
         "grid_size": 5,
         "tensorboard_dir": "tensorboard",
         "result_dir": result,
+        
         "checkpoint": checkpoint,
+        
         "display_count": 1,
         "shuffle": False
     }
@@ -85,6 +89,53 @@ def test_gmm(opt, test_loader, model, board):
         print("Error creating the 'result' folder:", str(e))
 
 
+
+    ### if warp-cloth is already present:
+    data_warp_cloth_dir = os.path.join(opt.dataroot,'test/warp-cloth')
+    if os.path.exists(data_warp_cloth_dir):
+        # If it exists, remove it and all its contents
+        # Use caution with this operation as it will permanently delete the folder and its contents
+        # Make sure to use the correct path and double-check before proceeding
+        try:
+            # Remove the directory and its contents
+            os.system(f'rmdir /s /q "{data_warp_cloth_dir}"')  # For Windows
+            # For Linux or macOS, use the following line instead:
+            # os.system(f'rm -rf "{save_dir}"')
+            print("Existing 'warp-cloth' folder and its contents deleted.")
+        except Exception as e:
+            print("Error deleting the 'warp-cloth' folder:", str(e))
+
+    # Create a new "result" folder
+    try:
+        os.makedirs(data_warp_cloth_dir)
+        print("New 'warp-cloth' folder created.")
+    except Exception as e:
+        print("Error creating the 'warp-cloth' folder:", str(e))
+
+#################################################################
+    ### if warp-mask is already present:
+    data_warp_mask_dir = os.path.join(opt.dataroot,'test/warp-mask')
+    if os.path.exists(data_warp_mask_dir):
+        # If it exists, remove it and all its contents
+        # Use caution with this operation as it will permanently delete the folder and its contents
+        # Make sure to use the correct path and double-check before proceeding
+        try:
+            # Remove the directory and its contents
+            os.system(f'rmdir /s /q "{data_warp_mask_dir}"')  # For Windows
+            # For Linux or macOS, use the following line instead:
+            # os.system(f'rm -rf "{save_dir}"')
+            print("Existing 'warp-mask' folder and its contents deleted.")
+        except Exception as e:
+            print("Error deleting the 'warp-mask' folder:", str(e))
+
+    # Create a new "result" folder
+    try:
+        os.makedirs(data_warp_mask_dir)
+        print("New 'warp-mask' folder created.")
+    except Exception as e:
+        print("Error creating the 'warp-mask' folder:", str(e))
+
+
     
 
     warp_cloth_dir = os.path.join(save_dir, 'warp-cloth')
@@ -109,6 +160,8 @@ def test_gmm(opt, test_loader, model, board):
     cloth_dir = os.path.join(save_dir, 'cloth')
     if not os.path.exists(cloth_dir):
         os.makedirs(cloth_dir)
+    
+    
 
 
     for step, inputs in enumerate(test_loader.data_loader):
@@ -152,6 +205,104 @@ def test_gmm(opt, test_loader, model, board):
         save_images(im, im_names, image_dir)
         save_images(c, im_names, cloth_dir)
 
+        print(opt.file2)
+        im_names = []
+        im_names.append(opt.file2)
+        save_images(warped_cloth, im_names, data_warp_cloth_dir)
+        save_images(warped_mask * 2 - 1, im_names, data_warp_mask_dir)
+
+
+
+        if (step+1) % opt.display_count == 0:
+            board_add_images(board, 'combine', visuals, step+1)
+            t = time.time() - iter_start_time
+            print('step: %8d, time: %.3f' % (step+1, t), flush=True)
+
+
+def test_tom(opt, test_loader, model, board):
+    model.cuda()
+    model.eval()
+
+    base_name = os.path.basename(opt.checkpoint)
+    # save_dir = os.path.join(opt.result_dir, base_name, opt.datamode)
+    save_dir = os.path.join(opt.result_dir, opt.name, opt.datamode)
+    
+    
+    # Check if the "result" folder exists
+    if os.path.exists(save_dir):
+        # If it exists, remove it and all its contents
+        # Use caution with this operation as it will permanently delete the folder and its contents
+        # Make sure to use the correct path and double-check before proceeding
+        try:
+            # Remove the directory and its contents
+            os.system(f'rmdir /s /q "{save_dir}"')  # For Windows
+            # For Linux or macOS, use the following line instead:
+            # os.system(f'rm -rf "{save_dir}"')
+            print("Existing 'result' folder and its contents deleted.")
+        except Exception as e:
+            print("Error deleting the 'result' folder:", str(e))
+
+    # Create a new "result" folder
+    try:
+        os.makedirs(save_dir)
+        print("New 'result' folder created.")
+    except Exception as e:
+        print("Error creating the 'result' folder:", str(e))
+
+    
+    try_on_dir = os.path.join(save_dir, 'try-on')
+    if not os.path.exists(try_on_dir):
+        os.makedirs(try_on_dir)
+    p_rendered_dir = os.path.join(save_dir, 'p_rendered')
+    if not os.path.exists(p_rendered_dir):
+        os.makedirs(p_rendered_dir)
+    m_composite_dir = os.path.join(save_dir, 'm_composite')
+    if not os.path.exists(m_composite_dir):
+        os.makedirs(m_composite_dir)
+    im_pose_dir = os.path.join(save_dir, 'im_pose')
+    if not os.path.exists(im_pose_dir):
+        os.makedirs(im_pose_dir)
+    shape_dir = os.path.join(save_dir, 'shape')
+    if not os.path.exists(shape_dir):
+        os.makedirs(shape_dir)
+    im_h_dir = os.path.join(save_dir, 'im_h')
+    if not os.path.exists(im_h_dir):
+        os.makedirs(im_h_dir)  # for test data
+
+    print('Dataset size: %05d!' % (len(test_loader.dataset)), flush=True)
+    for step, inputs in enumerate(test_loader.data_loader):
+        iter_start_time = time.time()
+
+        im_names = inputs['im_name']
+        im = inputs['image'].cuda()
+        im_pose = inputs['pose_image']
+        im_h = inputs['head']
+        shape = inputs['shape']
+
+        agnostic = inputs['agnostic'].cuda()
+        c = inputs['cloth'].cuda()
+        cm = inputs['cloth_mask'].cuda()
+
+        # outputs = model(torch.cat([agnostic, c], 1))  # CP-VTON
+        outputs = model(torch.cat([agnostic, c, cm], 1))  # CP-VTON+
+        p_rendered, m_composite = torch.split(outputs, 3, 1)
+        p_rendered = F.tanh(p_rendered)
+        m_composite = F.sigmoid(m_composite)
+        p_tryon = c * m_composite + p_rendered * (1 - m_composite)
+
+        visuals = [[im_h, shape, im_pose],
+                   [c, 2*cm-1, m_composite],
+                   [p_rendered, p_tryon, im]]
+        
+        im_names = []
+        im_names.append("latest.jpg")
+        save_images(p_tryon, im_names, try_on_dir)
+        save_images(im_h, im_names, im_h_dir)
+        save_images(shape, im_names, shape_dir)
+        save_images(im_pose, im_names, im_pose_dir)
+        save_images(m_composite, im_names, m_composite_dir)
+        save_images(p_rendered, im_names, p_rendered_dir)  # For test data
+
         if (step+1) % opt.display_count == 0:
             board_add_images(board, 'combine', visuals, step+1)
             t = time.time() - iter_start_time
@@ -159,9 +310,8 @@ def test_gmm(opt, test_loader, model, board):
 
 
 
-
-def main():
-    opt = get_opt()
+def main(opt):
+    
     print(opt)
     print("Start to test stage: %s, named: %s!" % (opt.stage, opt.name))
 
@@ -178,11 +328,13 @@ def main():
 
     # create model & test
     if opt.stage == 'GMM':
+    # if main_stage == 'GMM':
         model = GMM(opt)
         load_checkpoint(model, opt.checkpoint)
         with torch.no_grad():
             test_gmm(opt, test_loader, model, board)
     elif opt.stage == 'TOM':
+    # elif main_stage == 'TOM':
         # model = UnetGenerator(25, 4, 6, ngf=64, norm_layer=nn.InstanceNorm2d)  # CP-VTON
         model = UnetGenerator(26, 4, 6, ngf=64, norm_layer=nn.InstanceNorm2d)  # CP-VTON+
         load_checkpoint(model, opt.checkpoint)
@@ -214,7 +366,24 @@ def index(request):
         #f.write(file1.name," ", file2.name)
         #f.close()
 
-        main()
+        opt = get_opt()
+        opt.file1 = file1.name
+        opt.file2 = file2.name
+        main(opt)
+        
+        ##########setup for TOM#####
+        main_stage = "TOM"
+        opt.stage = "TOM"
+        opt.name = "TOM"
+        checkpoint = os.path.join(module_dir,'checkpoints/TOM/tom_final.pth')
+        result =  os.path.join(module_dir,"static/result2")
+        opt.checkpoint = checkpoint
+        opt.result_dir = result
+
+
+
+        main(opt)
+        print("doneewee")
         ##original = load_img(file_url, target_size=(224, 224))
         #numpy_image = img_to_array(original)
         context = {'condition_met': True}
