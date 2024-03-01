@@ -1,2 +1,5 @@
 GMM/data/
 GMM/checkpoints/
+GMM/
+db.sqlite3
+tensorboard/

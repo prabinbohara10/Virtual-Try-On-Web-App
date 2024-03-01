@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-0dmn4v%0&rwefcmd2&@7*37kvgukkd&jb^z9fmt5*p=7lbbdy!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -124,7 +124,7 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, 'GMM/result/GMM/test')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'GMM/data/test')
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [

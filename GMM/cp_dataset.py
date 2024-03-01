@@ -27,6 +27,7 @@ class CPDataset(data.Dataset):
         self.fine_width = opt.fine_width
         self.radius = opt.radius
         self.data_path = osp.join(opt.dataroot, opt.datamode)
+        
         # self.transform = transforms.Compose([
         #     transforms.ToTensor(),
         #     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -156,13 +157,23 @@ class CPDataset(data.Dataset):
         im_c = im * pcm + (1 - pcm)  # [-1,1], fill 1 for other parts
         im_h = im * phead - (1 - phead)  # [-1,1], fill -1 for other parts
 
+
+        ### to process the data from openpose since it provides 25 keypoints:
+        def process_array(arr):
+            return np.concatenate((arr[:15], arr[16:19]), axis=0)
+
         # load pose points
         pose_name = im_name.replace('.jpg', '_keypoints.json')
+        pose_name = pose_name.replace('.png', '_keypoints.json')
+        pose_name = pose_name.replace('.PNG', '_keypoints.json')
+        pose_name = pose_name.replace('.jpeg', '_keypoints.json')
         with open(osp.join(self.data_path, 'pose', pose_name), 'r') as f:
             pose_label = json.load(f)
             pose_data = pose_label['people'][0]['pose_keypoints']
             pose_data = np.array(pose_data)
             pose_data = pose_data.reshape((-1, 3))
+            #pose_data = process_array(pose_data)
+            print(pose_data.shape)
 
         point_num = pose_data.shape[0]
         pose_map = torch.zeros(point_num, self.fine_height, self.fine_width)

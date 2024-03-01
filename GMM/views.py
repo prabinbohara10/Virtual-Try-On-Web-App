@@ -1,10 +1,13 @@
 from django.shortcuts import render
-from django.http import request
+from django.http import request, HttpResponse
 
 # Create your views here.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from PIL import Image
+import os.path as osp
 
 import argparse
 import os
@@ -16,12 +19,28 @@ from tensorboardX import SummaryWriter
 from .visualization import board_add_image, board_add_images, save_images
 
 from django.core.files import File
-
 from django.core.files.storage import default_storage
 #from keras.preprocessing.image import load_img
 #from keras.preprocessing.image import img_to_array
 import argparse
+
+
+from .utils.custom_dataset import dataset_preparation
+from .utils.google_drive_apis_python_apps.g_drive_service import GoogleDriveService
+
 main_stage = "GMM"
+
+def get_file_list_from_gdrive():
+    g_drive_service = GoogleDriveService()
+    return {"files": g_drive_service.list_files()}
+
+def upload_file_to_gdrive(res, bool_delete):
+
+    parent_folder_id = '1DEzVAPGogBIhOmcTY-HBmYDUQlT9epL3'  # Provide the ID of the parent folder where you want to upload the folders
+    folders_to_upload = [res]  # List of folder paths to upload
+    g_drive_service = GoogleDriveService()
+    g_drive_service.main_upload_folders(folders_to_upload, parent_folder_id, bool_delete)
+    return "File uploaded successfully"
 
 def get_opt():
     module_dir = os.path.dirname(__file__)  
@@ -55,8 +74,6 @@ def get_opt():
 
     opt = argparse.Namespace(**args)
     return opt
-
-    
 
 
 def test_gmm(opt, test_loader, model, board):
@@ -349,26 +366,36 @@ def main(opt):
 def index(request):
     context = {'condition_met': False}
     if(request.method == "POST"):
-        file1 = request.FILES['sentFile1']
-        file2 = request.FILES['sentFile2']
+        file1 = request.FILES['sentFile1'] # person
+        file2 = request.FILES['sentFile2'] # cloth
 
-        print(file1.name)
+        print("person file, cloth file:", file1, file2)
+
+        # save images to folder:
+        person_file_path = default_storage.save("image/" + file1.name, file1)
+        cloth_file_path = default_storage.save("cloth/" + file2.name, file2)
         
+        print("Person file saved at:", person_file_path)
+        print("Cloth file saved at:", cloth_file_path)
+
+        file1_name = str(person_file_path).split("/")[1]
+        file2_name = str(cloth_file_path).split("/")[1]
+
+        dataset_preparation(file1_name, file2_name)
+        
+        #... write
         module_dir = os.path.dirname(__file__)  
         file_path = os.path.join(module_dir, 'data/test_pairs.txt')
-
-        #f = open("/data/test_paris.txt", "w")
-       
         with open(file_path, 'w') as file:
-            file.write(file1.name + " " + file2.name)
+            file.write(file1_name + " " + file2_name)
 
 
         #f.write(file1.name," ", file2.name)
         #f.close()
 
         opt = get_opt()
-        opt.file1 = file1.name
-        opt.file2 = file2.name
+        opt.file1 = file1_name
+        opt.file2 = file2_name
         main(opt)
         
         ##########setup for TOM#####
@@ -387,6 +414,20 @@ def index(request):
         ##original = load_img(file_url, target_size=(224, 224))
         #numpy_image = img_to_array(original)
         context = {'condition_met': True}
+
+
+        ###################################
+        #uploading to drive part:
+        module_dir = os.path.dirname(__file__)  
+        result1 =  os.path.join(module_dir,"static/result")
+        result2  =  os.path.join(module_dir,"static/result2")
+        upload_file_to_gdrive(result1, bool_delete =True)
+        upload_file_to_gdrive(result2,  bool_delete =False)
+
+        #... Making response ready ...#
+        #try_on_image = Image.open(osp.join(settings.BASE_DIR))
+        #return HttpResponse(, content_type="image/png")
+
 
     
     return render(request, 'home.html', context)
