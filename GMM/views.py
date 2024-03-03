@@ -23,6 +23,7 @@ from django.core.files.storage import default_storage
 #from keras.preprocessing.image import load_img
 #from keras.preprocessing.image import img_to_array
 import argparse
+from django.views.decorators.csrf import csrf_exempt
 
 
 from .utils.custom_dataset import dataset_preparation
@@ -363,6 +364,7 @@ def main(opt):
     print('Finished test %s, named: %s!' % (opt.stage, opt.name))
 
 
+@csrf_exempt
 def index(request):
     context = {'condition_met': False}
     if(request.method == "POST"):
