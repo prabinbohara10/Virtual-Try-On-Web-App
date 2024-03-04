@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import request, HttpResponse
+from django.http import JsonResponse
 
 # Create your views here.
 import torch
@@ -40,8 +41,8 @@ def upload_file_to_gdrive(res, bool_delete):
     parent_folder_id = '1DEzVAPGogBIhOmcTY-HBmYDUQlT9epL3'  # Provide the ID of the parent folder where you want to upload the folders
     folders_to_upload = [res]  # List of folder paths to upload
     g_drive_service = GoogleDriveService()
-    g_drive_service.main_upload_folders(folders_to_upload, parent_folder_id, bool_delete)
-    return "File uploaded successfully"
+    file_list = g_drive_service.main_upload_folders(folders_to_upload, parent_folder_id, bool_delete)
+    return file_list
 
 def get_opt():
     module_dir = os.path.dirname(__file__)  
@@ -377,6 +378,7 @@ def index(request):
     if(request.method == "POST"):
         file1 = request.FILES['sentFile1'] # person
         file2 = request.FILES['sentFile2'] # cloth
+        device_from = request.POST['device']
 
         print("person file, cloth file:", file1, file2)
 
@@ -430,13 +432,23 @@ def index(request):
         module_dir = os.path.dirname(__file__)  
         result1 =  os.path.join(module_dir,"static/result")
         result2  =  os.path.join(module_dir,"static/result2")
-        upload_file_to_gdrive(result1, bool_delete =True)
-        upload_file_to_gdrive(result2,  bool_delete =False)
+        file_list1 = upload_file_to_gdrive(result1, bool_delete =True)
+        file_list2 = upload_file_to_gdrive(result2,  bool_delete =False)
 
-        #... Making response ready ...#
-        #try_on_image = Image.open(osp.join(settings.BASE_DIR))
-        #return HttpResponse(, content_type="image/png")
+        # Combine file lists
+        combined_file_list = file_list1 + file_list2
 
+
+        # Prepare JSON response
+        response_data = {
+            'success': True,
+            'message': 'Files uploaded successfully',
+            'file_list': combined_file_list
+        }
+
+        print("device = ", device_from)
+        if(device_from == "mobile"):
+            return JsonResponse(response_data)
 
     
     return render(request, 'home.html', context)
