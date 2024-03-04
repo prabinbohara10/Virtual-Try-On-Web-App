@@ -504,6 +504,13 @@ class GMM(nn.Module):
 
     def __init__(self, opt):
         super(GMM, self).__init__()
+
+        ## added later to make it run in cpu also:
+        if torch.cuda.is_available():
+            cuda_bool =True
+        else:
+            cuda_bool = False
+
         self.extractionA = FeatureExtraction(
             22, ngf=64, n_layers=3, norm_layer=nn.BatchNorm2d)
         self.extractionB = FeatureExtraction(
@@ -511,9 +518,9 @@ class GMM(nn.Module):
         self.l2norm = FeatureL2Norm()
         self.correlation = FeatureCorrelation()
         self.regression = FeatureRegression(
-            input_nc=192, output_dim=2*opt.grid_size**2, use_cuda=True)
+            input_nc=192, output_dim=2*opt.grid_size**2, use_cuda=cuda_bool)
         self.gridGen = TpsGridGen(
-            opt.fine_height, opt.fine_width, use_cuda=True, grid_size=opt.grid_size)
+            opt.fine_height, opt.fine_width, use_cuda=cuda_bool, grid_size=opt.grid_size)
 
     def forward(self, inputA, inputB):
         featureA = self.extractionA(inputA)
@@ -539,4 +546,6 @@ def load_checkpoint(model, checkpoint_path):
     if not os.path.exists(checkpoint_path):
         return
     model.load_state_dict(torch.load(checkpoint_path))
-    model.cuda()
+
+    if torch.cuda.is_available():
+        model.cuda()
