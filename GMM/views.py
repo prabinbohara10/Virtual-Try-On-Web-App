@@ -27,7 +27,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 from .utils.custom_dataset import dataset_preparation
-from .utils.google_drive_apis_python_apps.g_drive_service import GoogleDriveService
+from .utils.google_drive_apis_python_app.g_drive_service import GoogleDriveService
 
 main_stage = "GMM"
 
