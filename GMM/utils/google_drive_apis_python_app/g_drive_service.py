@@ -22,8 +22,8 @@ class GoogleDriveService:
         for file in files:
             self.service.files().delete(fileId=file['id']).execute()
 
-    def upload_folders(self, folders_path_list, parent_folder_id=None):
-        file_list = []
+    def upload_folders(self, folders_path_list, parent_folder_id=None, file_list=[]):
+        
         for folder_path in folders_path_list:
             folder_name = os.path.basename(folder_path)
             folder_metadata = {
@@ -37,7 +37,7 @@ class GoogleDriveService:
             for item in os.listdir(folder_path):
                 item_path = os.path.join(folder_path, item)
                 if os.path.isdir(item_path):
-                    self.upload_folders([item_path], folder['id'])  # Recursively upload subfolders
+                    self.upload_folders([item_path], folder['id'], file_list)  # Recursively upload subfolders
                 else:
                     media = MediaFileUpload(item_path, resumable=True)
                     file_metadata = {
@@ -47,13 +47,16 @@ class GoogleDriveService:
                     file = self.service.files().create(body=file_metadata, media_body=media, fields='id').execute()
                     file_list.append(file.get('id'))
                     print('File ID:', file.get('id'))
+        #print("main file list = ", file_list)
         return file_list
     
                 
 
     def main_upload_folders(self, folders_path_list, parent_folder_id=None, bool_delete=True):
+        file_list = []
         if bool_delete:
             
             self.delete_files_in_folder(parent_folder_id)
-        
-        return self.upload_folders(folders_path_list, parent_folder_id)
+        file_list = self.upload_folders(folders_path_list, parent_folder_id, file_list)
+        #print("file_list_g_dive ", file_list)
+        return file_list

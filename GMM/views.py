@@ -42,6 +42,7 @@ def upload_file_to_gdrive(res, bool_delete):
     folders_to_upload = [res]  # List of folder paths to upload
     g_drive_service = GoogleDriveService()
     file_list = g_drive_service.main_upload_folders(folders_to_upload, parent_folder_id, bool_delete)
+    #print("file_list_g_drive_views ", file_list)
     return file_list
 
 def get_opt():
@@ -446,8 +447,10 @@ def index(request):
             'file_list': combined_file_list
         }
 
+        
         print("device = ", device_from)
         if(device_from == "mobile"):
+            print("Json Response data =", response_data)
             return JsonResponse(response_data)
 
     
