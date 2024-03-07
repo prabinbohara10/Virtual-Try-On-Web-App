@@ -3,15 +3,37 @@ import subprocess
 import os
 from django.conf import settings
 
+from rembg import remove
+from PIL import Image
+
 from .image_mask import make_body_mask
 from .openpose_json import generate_pose_keypoints
 from .cloth_mask import cloth_masking
 #from GMM.checkpoints.openpose import for_django_views
 
+def overlay_images(original_image_path, output_path):
+    # Load the original image
+    original_image = Image.open(original_image_path)
+
+    # Change the background to white
+    white_background_image = Image.new("RGBA", original_image.size, (255, 255, 255, 255))
+    white_background_image.paste(original_image, (0, 0), original_image)
+    white_background_image.save(output_path)
+
 def dataset_preparation(filename_person,filename_cloth):
     filepath_person = os.path.join(settings.BASE_DIR, "GMM/data/test/image/", filename_person)
     filepath_cloth = os.path.join(settings.BASE_DIR, "GMM/data/test/cloth/", filename_cloth)
     print(filepath_person, filepath_cloth)
+
+    # ... adjust backgrounds:...#
+    input_path = filepath_person
+    output_path = os.path.join(settings.BASE_DIR, "GMM/data/test/image_bg_removed/", filename_person)
+
+    input = Image.open(input_path)
+    output = remove(input)
+    output.save(output_path)
+    overlay_images(output_path, input_path)
+    
 
     # ..... Resize/Crop Images 192 x 256 (width x height) ..... # 
     img_p = cv2.imread(filepath_person)

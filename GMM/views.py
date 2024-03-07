@@ -238,7 +238,7 @@ def test_gmm(opt, test_loader, model, board):
 
 
         if (step+1) % opt.display_count == 0:
-            board_add_images(board, 'combine', visuals, step+1)
+            #board_add_images(board, 'combine', visuals, step+1)
             t = time.time() - iter_start_time
             print('step: %8d, time: %.3f' % (step+1, t), flush=True)
 
@@ -331,7 +331,7 @@ def test_tom(opt, test_loader, model, board):
         save_images(p_rendered, im_names, p_rendered_dir)  # For test data
 
         if (step+1) % opt.display_count == 0:
-            board_add_images(board, 'combine', visuals, step+1)
+            #board_add_images(board, 'combine', visuals, step+1)
             t = time.time() - iter_start_time
             print('step: %8d, time: %.3f' % (step+1, t), flush=True)
 
